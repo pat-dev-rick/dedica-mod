@@ -1,7 +1,8 @@
 use anyhow::Result;
 use clap::Parser;
-use log::{debug, error, info, trace, warn};
+use log::debug;
 use rppal::spi::{Bus, Mode, Segment, SlaveSelect, Spi};
+use std::time::SystemTime;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -10,7 +11,7 @@ struct Args {
     verbose: clap_verbosity_flag::Verbosity,
 
     // Temperature Poll Intervall
-    #[arg(value_parser = parse_duration, long, default_value = "100")]
+    #[arg(value_parser = parse_duration, long, default_value = "500")]
     temperature_poll_ms: std::time::Duration,
 
     // Temperature SPI Interface
@@ -31,23 +32,31 @@ fn main() -> Result<()> {
         .verbosity(args.verbose.log_level_filter())
         .init()?;
 
-    // Configure the SPI peripheral. The 24AA1024 clocks in data on the first
-    // rising edge of the clock signal (SPI mode 0). At 3.3 V, clock speeds of up
-    // to 10 MHz are supported.
-    let mut spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 2_000_000, Mode::Mode0)?;
+    // Configure the SPI peripheral.
+    let spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 2_000_000, Mode::Mode0)?;
 
     let mut buffer = [0u8; 2];
     loop {
+        let start = SystemTime::now();
         spi.transfer_segments(&[Segment::with_read(&mut buffer)])?;
-        let b = u16::from_le_bytes(buffer);
-        debug!("Temperature-sensor | incomming bytes: {b:#b}");
+        let buffer_u16 = u16::from_be_bytes(buffer);
+        debug!(
+            "Temperature-Sensor | incomming byte 1: {:#010b} | byte 2: {:#010b} | as u16: {:#018b}",
+            buffer[0], buffer[1], buffer_u16
+        );
+
+        buffer = [0, 0];
+
+        std::thread::sleep(args.temperature_poll_ms.saturating_sub(start.elapsed()?))
     }
-
-    trace!("trace message");
-    debug!("debug message");
-    info!("info message");
-    warn!("warn message");
-    error!("error message");
-
-    Ok(())
 }
+
+/*
+fn print_max6675_output(input: [u8;2]) {
+    let DUMMY_SIGN_BIT =
+    let TEMPERATURE_READING =
+    let THERMOCOUPLE_INPUT =
+    let DEVICE_ID =
+    let STATE =
+}
+*/
