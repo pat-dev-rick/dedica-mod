@@ -7,4 +7,7 @@ description = "Measure the temperature and pressure of the DeLonghi Dedica and p
 readme = "README.md"
 repository = "https://github.com/pat-dev-rick/dedica-mod"
 
+
 [dependencies]
+clap = { version = "4.0.30", default-features = true, features = ["derive"] }
+clap-verbosity-flag = "2.0.0"
