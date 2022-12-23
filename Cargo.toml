@@ -12,3 +12,5 @@ repository = "https://github.com/pat-dev-rick/dedica-mod"
 clap = { version = "4.0.30", default-features = true, features = ["derive"] }
 clap-verbosity-flag = "2.0.0"
 anyhow = "1.0.68"
+log = "0.4.17"
+stderrlog = "0.5.4"

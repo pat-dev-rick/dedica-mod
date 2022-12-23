@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use log::{debug, error, info, trace, warn};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -22,7 +23,18 @@ fn parse_duration(arg: &str) -> Result<std::time::Duration, std::num::ParseIntEr
 }
 fn main() -> Result<()> {
     let args = Args::parse();
-    println!("Hello, world!");
+
+    stderrlog::new()
+        .module(module_path!())
+        .quiet(args.verbose.is_silent())
+        .verbosity(args.verbose.log_level_filter())
+        .init()?;
+
+    trace!("trace message");
+    debug!("debug message");
+    info!("info message");
+    warn!("warn message");
+    error!("error message");
 
     Ok(())
 }
