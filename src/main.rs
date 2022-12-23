@@ -1,3 +1,4 @@
+use anyhow::Result;
 use clap::Parser;
 
 #[derive(Parser)]
@@ -19,7 +20,9 @@ fn parse_duration(arg: &str) -> Result<std::time::Duration, std::num::ParseIntEr
     let ms = arg.parse()?;
     Ok(std::time::Duration::from_millis(ms))
 }
-fn main() {
+fn main() -> Result<()> {
     let args = Args::parse();
     println!("Hello, world!");
+
+    Ok(())
 }
