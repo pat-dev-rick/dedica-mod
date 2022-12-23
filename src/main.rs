@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use log::{debug, error, info, trace, warn};
+use rppal::spi::{Bus, Mode, Segment, SlaveSelect, Spi};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -29,6 +30,18 @@ fn main() -> Result<()> {
         .quiet(args.verbose.is_silent())
         .verbosity(args.verbose.log_level_filter())
         .init()?;
+
+    // Configure the SPI peripheral. The 24AA1024 clocks in data on the first
+    // rising edge of the clock signal (SPI mode 0). At 3.3 V, clock speeds of up
+    // to 10 MHz are supported.
+    let mut spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 2_000_000, Mode::Mode0)?;
+
+    let mut buffer = [0u8; 2];
+    loop {
+        spi.transfer_segments(&[Segment::with_read(&mut buffer)])?;
+        let b = u16::from_le_bytes(buffer);
+        debug!("Temperature-sensor | incomming bytes: {b:#b}");
+    }
 
     trace!("trace message");
     debug!("debug message");
