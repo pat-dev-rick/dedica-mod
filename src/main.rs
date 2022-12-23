@@ -4,6 +4,8 @@ use log::debug;
 use rppal::spi::{Bus, Mode, Segment, SlaveSelect, Spi};
 use std::time::SystemTime;
 
+const TEMPERATURE_MASK: u16 = 0b01111111_11111000;
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -45,18 +47,18 @@ fn main() -> Result<()> {
             buffer[0], buffer[1], buffer_u16
         );
 
-        buffer = [0, 0];
+        let temperature_b = (buffer_u16 & TEMPERATURE_MASK) >> 3;
+        let temperature = (temperature_b as f32) / 4.0;
+        debug!("Temperature-Sensor | Temperature: {temperature} °C | as u16: {temperature_b:#018b}");
 
+        buffer = [0, 0];
         std::thread::sleep(args.temperature_poll_ms.saturating_sub(start.elapsed()?))
     }
 }
 
-/*
-fn print_max6675_output(input: [u8;2]) {
-    let DUMMY_SIGN_BIT =
-    let TEMPERATURE_READING =
-    let THERMOCOUPLE_INPUT =
-    let DEVICE_ID =
-    let STATE =
+#[test]
+fn test() {
+    let t: u16 = 0b00001111_11111111;
+    let t_2 = t as f32 / 4.0;
+    assert_eq!(1023.75, t_2)
 }
-*/
