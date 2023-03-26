@@ -29,4 +29,5 @@ jobs:
     - name: Archive build artefact
       uses: actions/upload-artifact@v3
       with:
-          path: target/debug/dedica-mod
+        name: dedica-mod-x86_64-unknown-linux-gnu
+        path: target/debug/dedica-mod
