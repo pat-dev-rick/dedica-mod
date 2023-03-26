@@ -25,4 +25,8 @@ jobs:
     - name: Run unit tests (cargo test)
       run: cargo test --verbose
     - name: Run static code analysis (cargo clippy)
-      run: cargo clippy
+      run: cargo clippy 
+    - name: Archive build artefact
+      uses: actions/upload-artifact@v3
+      with:
+          path: target/debug/dedica-mod
