@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use log::{debug, error, info, trace, warn};
+use ads1x1x::{channel, Ads1x1x, SlaveAddr};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -13,6 +14,14 @@ struct Args {
     temperature_poll_ms: std::time::Duration,
 
     // Temperature SPI Interface
+    #[arg(long, default_value = "/dev/spidev0.0")]
+    temperature_spi: String,
+
+    // Temperature I2C Interface (ADC - ADS 1115)
+    #[arg(long, default_value = "/dev/i2c-1")]
+    temperature_spi: String,
+
+    // Temperature I2C ADC Channel
     #[arg(long, default_value = "/dev/spidev0.0")]
     temperature_spi: String,
 }
