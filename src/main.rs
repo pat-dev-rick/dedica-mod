@@ -1,7 +1,8 @@
-use anyhow::Result;
+use std::time::SystemTime;
+use ads1x1x::{Ads1x1x, ModeChangeError, SlaveAddr};
+use anyhow::{bail, Result};
 use clap::Parser;
-use log::{debug, error, info, trace, warn};
-use ads1x1x::{channel, Ads1x1x, SlaveAddr};
+use linux_embedded_hal::I2cdev;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -19,11 +20,11 @@ struct Args {
 
     // Temperature I2C Interface (ADC - ADS 1115)
     #[arg(long, default_value = "/dev/i2c-1")]
-    temperature_spi: String,
+    temperature_i2c: String,
 
     // Temperature I2C ADC Channel
-    #[arg(long, default_value = "/dev/spidev0.0")]
-    temperature_spi: String,
+    #[arg(long, default_value = "1")]
+    temperature_i2c_channel: String,
 }
 
 fn parse_duration(arg: &str) -> Result<std::time::Duration, std::num::ParseIntError> {
@@ -39,11 +40,20 @@ fn main() -> Result<()> {
         .verbosity(args.verbose.log_level_filter())
         .init()?;
 
-    trace!("trace message");
-    debug!("debug message");
-    info!("info message");
-    warn!("warn message");
-    error!("error message");
+    let dev = I2cdev::new(args.temperature_i2c)?;
+    let address = SlaveAddr::default();
+    let adc = Ads1x1x::new_ads1115(dev, address);
 
-    Ok(())
+    match adc.into_continuous() {
+        Err(ModeChangeError::I2C(e, adc)) => {
+            let _dev = adc.destroy_ads1115();
+            bail!("{e}");
+        }
+        Ok(mut adc) => loop {
+            let start = SystemTime::now();
+            let measurement = adc.read().unwrap();
+            println!("Value: {measurement}");
+            std::thread::sleep(args.temperature_poll_ms.saturating_sub(start.elapsed()?))
+        },
+    }
 }
